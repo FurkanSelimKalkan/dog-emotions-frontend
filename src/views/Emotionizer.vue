@@ -1,23 +1,23 @@
 <template>
   <div class="container">
-    <h2>
-      Please upload a picture with only one dog (not several)
-    </h2>
-    <h3 v-if="prediction">Our model can say with {{ this.confidence*100 }}% confidence that the identified emotion is: {{ this.prediction }}</h3>
+    <h2>Please upload a picture with only one dog (not several)</h2>
+    <h3 v-if="prediction">Emotion: {{ this.prediction }}</h3>
+    <h3 v-if="confidence">Confidence: {{ this.confidence * 100 }}%</h3>
     <div class="dog-image-container" v-if="fileUrl">
-    <img class="dog-image" :src="fileUrl" v-if="fileUrl" />
+      <img class="dog-image" :src="fileUrl" v-if="fileUrl" />
     </div>
-      <div v-if="prediction"> {{ getRandomResponse(this.prediction)}} </div>
-      <div class="upload-button">
+    <div v-if="prediction"> {{ getRandomResponse(this.prediction)}} </div>
+    <div class="upload-button">
       <input
-              ref="fileInput"
-              class="input-custom"
-              id="file-input"
-              type="file"
-              @change="handleChange"
+          ref="fileInput"
+          class="input-custom"
+          id="file-input"
+          type="file"
+          @change="handleChange"
       />
       <label for="file-input" class="label-custom">Upload</label>
-  </div>
+      <button class="label-custom" @click="callAPI">Submit</button>
+    </div>
   </div>
 </template>
 
@@ -31,7 +31,7 @@ export default {
       isUpload: true,
       prediction: "",
       confidence: "",
-      angryResponses : [
+      angryResponses: [
         "Your dog seems to be angry. It may be best to give them some space.",
         "Looks like your dog is feeling angry. Try to identify any triggers or sources of frustration.",
         "The emotion detected in your dog is anger. Take precautions and ensure everyone's safety.",
@@ -43,7 +43,7 @@ export default {
         "If your dog is displaying signs of anger, consider consulting with a certified dog behaviorist.",
         "An angry dog might require additional socialization and training to address their emotions."
       ],
-      happyResponses : [
+      happyResponses: [
         "Your dog seems to be happy. Keep up the good work!",
         "Looks like your dog is feeling happy. Keep doing what you're doing!",
         "The emotion detected in your dog is happiness. Keep up the good work!",
@@ -55,7 +55,7 @@ export default {
         "If your dog is displaying signs of happiness, consider consulting with a certified dog behaviorist.",
         "A happy dog might require additional socialization and training to address their emotions."
       ],
-      sadResponses : [
+      sadResponses: [
         "Your dog seems to be sad. It may be best to give them some space.",
         "Looks like your dog is feeling sad. Try to identify any triggers or sources of frustration.",
         "The emotion detected in your dog is sadness. Take precautions and ensure everyone's safety.",
@@ -67,7 +67,7 @@ export default {
         "If your dog is displaying signs of sadness, consider consulting with a certified dog behaviorist.",
         "A sad dog might require additional socialization and training to address their emotions."
       ],
-      relaxedResponses : [
+      relaxedResponses: [
         "Your dog seems to be relaxed and content. It's a good sign!",
         "Looks like your dog is feeling relaxed. Give them some well-deserved rest and relaxation.",
         "A relaxed dog is a happy dog. Enjoy the peaceful moments together!",
@@ -79,70 +79,89 @@ export default {
         "Take a moment to appreciate the serenity your dog brings when they're relaxed.",
         "Relaxed dogs are often more receptive to training and socialization. Utilize this time for positive experiences."
       ]
-
     };
   },
-    components: {
-    },
   methods: {
-      handleChange(event) {
-          this.file = event.target.files[0];
-          this.getEmotion(event);
-      },
+    handleChange(event) {
+      this.file = event.target.files[0];
+      this.getEmotion(event);
+    },
+    getEmotion(event) {
+      const selectedFile = event.target.files[0];
+      console.log(selectedFile);
+      const formData = new FormData();
+      formData.append("image", selectedFile);
 
-      getEmotion(event) {
-          const selectedFile = event.target.files[0];
-          console.log(selectedFile)
-          const formData = new FormData();
-          formData.append("image", selectedFile);
+      axios
+          .post("http://localhost:5000/predict", formData, {
+            headers: {
+              "Content-Type": "multipart/form-data"
+            }
+          })
+          .then((response) => {
+            this.prediction = response.data.prediction;
+            this.confidence = response.data.confidence.toFixed(2);
+            this.$forceUpdate();
+          })
 
-          axios
-              .post("http://localhost:5000/predict", formData, {
-                  headers: {
-                      "Content-Type": "multipart/form-data",
-                  },
-              })
-              .then((response) => {
-                  this.prediction = response.data.prediction;
-                  this.confidence = response.data.confidence.toFixed(2);
-              })
-              .catch((error) => {
-                  console.error(error);
-              });
-      },
-     getRandomResponse(emotion) {
-  let responses;
+          .catch((error) => {
+            console.error(error);
+          });
+    },
+    getRandomResponse(emotion) {
+      let responses;
 
-  switch (emotion) {
-    case "angry":
-      responses = this.angryResponses;
-      break;
-    case "happy":
-      responses = this.happyResponses;
-      break;
-    case "sad":
-      responses = this.sadResponses;
-      break;
-    case "relaxed":
-      responses = this.relaxedResponses;
-      break;
-    default:
-      return "No emotion detected. Please try again.";
-  }
+      switch (emotion) {
+        case "angry":
+          responses = this.angryResponses;
+          break;
+        case "happy":
+          responses = this.happyResponses;
+          break;
+        case "sad":
+          responses = this.sadResponses;
+          break;
+        case "relaxed":
+          responses = this.relaxedResponses;
+          break;
+        default:
+          return "No emotion detected. Please try again.";
+      }
 
-  const randomIndex = Math.floor(Math.random() * responses.length);
-  return responses[randomIndex];
-}
-
-},
+      const randomIndex = Math.floor(Math.random() * responses.length);
+      return responses[randomIndex];
+    },
+    callAPI() {
+      if (this.file) {
+        const formData = new FormData();
+        formData.append("image", this.file);
+        // CHANGE THIS WITH PC IP ADDRESS INSTEAD OF LOCALHOST
+        axios
+            .post(`http://${import.meta.env.VITE_APP_IP}:5000/predict`, formData, {
+              // .post("http://localhost:5000/predict", formData, {
+              headers: {
+                "Content-Type": "multipart/form-data"
+              }
+            })
+            .then((response) => {
+              this.prediction = response.data.prediction;
+              this.confidence = response.data.confidence.toFixed(2);
+              this.$forceUpdate();
+            })
+            .catch((error) => {
+              console.error(error);
+            });
+      }
+    }
+  },
   computed: {
     fileUrl() {
       if (this.file) {
         return URL.createObjectURL(this.file);
       }
       return null;
-    },
-  },
+    }
+  }
 };
 </script>
 
@@ -168,27 +187,34 @@ export default {
   height: auto;
 }
 
-.label-custom {
-    display: flex;
-    width: 5rem;
-    height: 1.5rem;
-    padding: 5px;
-    background-color: #00BFFF;
-    border-radius: 5px;
-    transition: all 0.4s;
-    align-items: center;
-    justify-content: center;
+.label-custom{
+  display: flex;
+  width: 5rem;
+  height: 1.5rem;
+  background-color: #00bfff;
+  border-radius: 5px;
+  border-color: transparent;
+  transition: all 0.4s;
+  align-items: center;
+  justify-content: center;
 }
 
-.label-custom:hover,.label-custom:active , .label-custom:focus {
-    color: #FFA500;
-    background-color: #333333;
-    border-radius: 5px;
-    padding: 5px;
-    cursor: pointer;
+.label-custom:hover,
+.label-custom:active,
+.label-custom:focus{
+  color: #ffa500;
+  background-color: #333333;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.upload-button {
+  display: flex;
+  gap: 10px;
 }
 
 .input-custom {
-    display: none;
+  display: none;
 }
+
 </style>
