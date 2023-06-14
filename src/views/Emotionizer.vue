@@ -7,15 +7,10 @@
       <img class="dog-image" :src="fileUrl" v-if="fileUrl" />
     </div>
     <div class="emotion-text" v-if="prediction"> {{ getRandomResponse(this.prediction)}} </div>
-    <div class="upload-button">
-      <input
-          ref="fileInput"
-          class="input-custom"
-          id="file-input"
-          type="file"
-          @change="handleChange"
-      />
-      <label for="file-input" class="label-custom">Upload</label>
+    <div class="upload-buttons">
+      <button class="label-custom" @click="handleUpload">Upload</button>
+      <input ref="fileInput" class="input-custom" id="file-input" type="file" style="display: none" @change="handleChange" />
+
       <button class="label-custom" @click="callAPI">Submit</button>
     </div>
   </div>
@@ -36,6 +31,9 @@ export default {
     };
   },
   methods: {
+    handleUpload() {
+      this.$refs.fileInput.click();
+    },
     handleChange(event) {
       this.file = event.target.files[0];
       this.getEmotion(event);
@@ -131,7 +129,7 @@ export default {
   display: flex;
   border: 2px solid #333333;
   border-radius: 10px;
-  max-width: 50%;
+  max-width: 75%;
   height: auto;
   margin: 7px auto;
   padding: 7px;
@@ -156,7 +154,8 @@ export default {
   justify-content: center;
   color: black;
   font-weight: normal;
-  font-size: 12px;
+  font-size: 16px;
+  padding: 20px 70px 20px 70px;
 }
 
 .label-custom:hover,
@@ -168,12 +167,16 @@ export default {
   cursor: pointer;
 }
 
-.upload-button {
+.upload-buttons {
   display: flex;
   align-items: center;
   gap: 10px;
   margin-top: 10px;
   justify-content: center;
+  position: absolute;
+  bottom: 20px; /* Adjust the value as needed */
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .emotion-text {
