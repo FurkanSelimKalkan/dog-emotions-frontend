@@ -3,7 +3,7 @@
     <h2>
       Please upload a picture with only one dog (not several)
     </h2>
-    <h3 v-if="prediction">Identified emotion: {{ this.prediction }}</h3>
+    <h3 v-if="prediction">Our model can say with {{ this.confidence*100 }}% confidence that the identified emotion is: {{ this.prediction }}</h3>
     <div class="dog-image-container" v-if="fileUrl">
     <img class="dog-image" :src="fileUrl" v-if="fileUrl" />
     </div>
@@ -30,6 +30,7 @@ export default {
       file: null,
       isUpload: true,
       prediction: "",
+      confidence: "",
       angryResponses : [
         "Your dog seems to be angry. It may be best to give them some space.",
         "Looks like your dog is feeling angry. Try to identify any triggers or sources of frustration.",
@@ -103,6 +104,7 @@ export default {
               })
               .then((response) => {
                   this.prediction = response.data.prediction;
+                  this.confidence = response.data.confidence.toFixed(2);
               })
               .catch((error) => {
                   console.error(error);
