@@ -1,3 +1,3 @@
 # dog-emotions frontend
 
-This is the frontend for the Dog Emotions AI
+This is a simple frontend for the Dog Emotions AI
